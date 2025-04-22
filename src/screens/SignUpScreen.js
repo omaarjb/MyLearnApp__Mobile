@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,168 +9,385 @@ import {
   ActivityIndicator,
   Image,
   ScrollView,
-} from "react-native"
-import { useSignUp } from "@clerk/clerk-expo"
-import { useNavigation } from "@react-navigation/native"
-import * as WebBrowser from "expo-web-browser"
-import { makeRedirectUri } from "expo-auth-session"
+  Animated,
+  StatusBar,
+  SafeAreaView,
+  Dimensions,
+} from "react-native";
+import { useSignUp } from "@clerk/clerk-expo";
+import { useNavigation } from "@react-navigation/native";
+import * as WebBrowser from "expo-web-browser";
+import { makeRedirectUri } from "expo-auth-session";
+import { LinearGradient } from "expo-linear-gradient";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 
-import Input from "../components/ui/Input"
-import Button from "../components/ui/Button"
-import OAuthButton from "../components/ui/OAuthButton"
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
+import OAuthButton from "../components/ui/OAuthButton";
 
-WebBrowser.maybeCompleteAuthSession()
+WebBrowser.maybeCompleteAuthSession();
+
+const { width } = Dimensions.get("window");
 
 const SignUpScreen = () => {
-  const { signUp, setActive, isLoaded } = useSignUp()
-  const navigation = useNavigation()
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const [verifying, setVerifying] = useState(false)
-  const [code, setCode] = useState("")
+  // Animation values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const formFadeAnim = useRef(new Animated.Value(0)).current;
+  const formSlideAnim = useRef(new Animated.Value(50)).current;
+  const socialFadeAnim = useRef(new Animated.Value(0)).current;
+  const socialSlideAnim = useRef(new Animated.Value(50)).current;
 
-  const redirectUrl = makeRedirectUri()
+  // Hooks and state
+  const { signUp, setActive, isLoaded } = useSignUp();
+  const navigation = useNavigation();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [passwordStrength, setPasswordStrength] = useState(0);
+
+  const redirectUrl = makeRedirectUri({
+    preferLocalhost: true,
+  });
+
+  // Start animations
+  useEffect(() => {
+    if (isLoaded) {
+      Animated.sequence([
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(slideAnim, {
+            toValue: 0,
+            duration: 800,
+            useNativeDriver: true,
+          })
+        ]),
+        Animated.parallel([
+          Animated.timing(formFadeAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(formSlideAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          })
+        ]),
+        Animated.parallel([
+          Animated.timing(socialFadeAnim, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(socialSlideAnim, {
+            toValue: 0,
+            duration: 600,
+            useNativeDriver: true,
+          })
+        ])
+      ]).start();
+    }
+  }, [isLoaded]);
+
+  // Password strength checker
+  useEffect(() => {
+    if (!password) {
+      setPasswordStrength(0);
+      return;
+    }
+
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength += 1;
+    
+    // Contains uppercase
+    if (/[A-Z]/.test(password)) strength += 1;
+    
+    // Contains lowercase
+    if (/[a-z]/.test(password)) strength += 1;
+    
+    // Contains number
+    if (/[0-9]/.test(password)) strength += 1;
+    
+    // Contains special character
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+    
+    setPasswordStrength(strength);
+  }, [password]);
+
+  const getPasswordStrengthLabel = () => {
+    if (!password) return "";
+    if (passwordStrength <= 1) return "Weak";
+    if (passwordStrength <= 3) return "Medium";
+    return "Strong";
+  };
+
+  const getPasswordStrengthColor = () => {
+    if (!password) return "#E5E5E5";
+    if (passwordStrength <= 1) return "#FF3B30";
+    if (passwordStrength <= 3) return "#FFCC00";
+    return "#34C759";
+  };
 
   const handleSignUp = async () => {
-    if (!isLoaded) return
+    if (!isLoaded) return;
 
-    setLoading(true)
-    setError("")
-
+    // Basic validation
+    if (!firstName.trim()) {
+      setError("First name is required");
+      return;
+    }
+    
+    if (!lastName.trim()) {
+      setError("Last name is required");
+      return;
+    }
+    
+    if (!email.trim()) {
+      setError("Email is required");
+      return;
+    }
+    
+    if (!password) {
+      setError("Password is required");
+      return;
+    }
+    
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+  
+    setLoading(true);
+    setError("");
+  
     try {
+      // Create the sign-up attempt
       await signUp.create({
         firstName,
         lastName,
         emailAddress: email,
         password,
-      })
-
-      // Start the email verification process
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
-      setVerifying(true)
+      });
+  
+      // Prepare email verification
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      
+      // Navigate to verification screen
+      navigation.navigate("VerifyEmail", { email });
+      
     } catch (err) {
-      setError(err.errors[0]?.message || "Something went wrong")
+      console.error("Sign up error:", err);
+      setError(err.errors?.[0]?.message || "Something went wrong");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleVerification = async () => {
-    if (!isLoaded) return
-
-    setLoading(true)
-    setError("")
-
-    try {
-      const result = await signUp.attemptEmailAddressVerification({
-        code,
-      })
-
-      await setActive({ session: result.createdSessionId })
-      navigation.navigate("Home")
-    } catch (err) {
-      setError(err.errors[0]?.message || "Verification failed")
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // OAuth providers setup
   const handleOAuthSignUp = async (strategy) => {
-    if (!isLoaded) return
-
-    setLoading(true)
-    setError("")
-
+    if (!isLoaded) return;
+    
     try {
+      setLoading(true);
+      setError("");
+      
       const result = await signUp.authenticateWithRedirect({
         strategy,
         redirectUrl,
         redirectUrlComplete: redirectUrl,
-      })
+      });
 
-      const { createdSessionId } = result
+      const { createdSessionId } = result;
       if (createdSessionId) {
-        await setActive({ session: createdSessionId })
-        navigation.navigate("Home")
+        await setActive({ session: createdSessionId });
+        navigation.navigate("Home");
       }
     } catch (err) {
-      setError(err.errors[0]?.message || "Something went wrong with OAuth")
+      console.error(`${strategy} OAuth error:`, err);
+      setError(err.errors?.[0]?.message || "OAuth sign up failed. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // Loading state
   if (!isLoaded) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C47FF" />
+        <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+        <LinearGradient
+          colors={['#f7f9ff', '#ffffff']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.loadingIndicator}>
+          <ActivityIndicator size="large" color="#6C47FF" />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
       </View>
-    )
+    );
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Image source={{ uri: "/placeholder.svg?height=80&width=80" }} style={styles.logo} />
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Sign up to get started</Text>
-        </View>
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <LinearGradient
+        colors={['#f7f9ff', '#ffffff']}
+        style={StyleSheet.absoluteFill}
+      />
+      
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <Animated.View 
+            style={[
+              styles.header,
+              {
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }]
+              }
+            ]}
+          >
+            <View style={styles.logoContainer}>
+              <LinearGradient
+                colors={['#7C5AFF', '#6C47FF']}
+                style={styles.logoBackground}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Image 
+                  source={{ uri: "/placeholder.svg?height=80&width=80" }} 
+                  style={styles.logo} 
+                />
+              </LinearGradient>
+            </View>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join MyLearn and start your learning journey</Text>
+          </Animated.View>
 
-        {error ? <Text style={styles.errorText}>{error}</Text> : null}
-
-        {verifying ? (
-          <View style={styles.form}>
-            <Text style={styles.verificationText}>
-              We've sent a verification code to your email. Please enter it below.
-            </Text>
-            <Input
-              label="Verification Code"
-              value={code}
-              onChangeText={setCode}
-              placeholder="Enter verification code"
-              keyboardType="number-pad"
-            />
-            <Button title="Verify Email" onPress={handleVerification} loading={loading} />
-          </View>
-        ) : (
-          <>
-            <View style={styles.form}>
-              <View style={styles.nameRow}>
-                <View style={styles.nameField}>
-                  <Input label="First Name" value={firstName} onChangeText={setFirstName} placeholder="First name" />
-                </View>
-                <View style={styles.nameField}>
-                  <Input label="Last Name" value={lastName} onChangeText={setLastName} placeholder="Last name" />
-                </View>
+          <Animated.View 
+            style={[
+              styles.formCard,
+              {
+                opacity: formFadeAnim,
+                transform: [{ translateY: formSlideAnim }]
+              }
+            ]}
+          >
+            {error ? (
+              <View style={styles.errorContainer}>
+                <MaterialCommunityIcons name="alert-circle" size={20} color="#FF3B30" />
+                <Text style={styles.errorText}>{error}</Text>
               </View>
+            ) : null}
 
-              <Input
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              <Input
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Create a password"
-                secureTextEntry
-              />
-
-              <Text style={styles.passwordHint}>Password must be at least 8 characters long</Text>
-
-              <Button title="Sign Up" onPress={handleSignUp} loading={loading} />
+            <View style={styles.nameRow}>
+              <View style={styles.nameField}>
+                <Input
+                  label="First Name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="John"
+                  icon="account-outline"
+                  containerStyle={styles.inputContainer}
+                />
+              </View>
+              <View style={styles.nameField}>
+                <Input
+                  label="Last Name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Doe"
+                  containerStyle={styles.inputContainer}
+                />
+              </View>
             </View>
 
+            <Input
+              label="Email Address"
+              value={email}
+              onChangeText={setEmail}
+              placeholder="your.email@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              icon="email-outline"
+              containerStyle={styles.inputContainer}
+            />
+
+            <Input
+              label="Password"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="Create a secure password"
+              secureTextEntry
+              icon="lock-outline"
+              containerStyle={styles.inputContainer}
+            />
+
+            <View style={styles.passwordStrengthContainer}>
+              <View style={styles.passwordStrengthBars}>
+                {[1, 2, 3, 4, 5].map((index) => (
+                  <View 
+                    key={index}
+                    style={[
+                      styles.passwordStrengthBar,
+                      { 
+                        backgroundColor: passwordStrength >= index 
+                          ? getPasswordStrengthColor() 
+                          : '#E5E5E5' 
+                      }
+                    ]}
+                  />
+                ))}
+              </View>
+              {password ? (
+                <Text 
+                  style={[
+                    styles.passwordStrengthText,
+                    { color: getPasswordStrengthColor() }
+                  ]}
+                >
+                  {getPasswordStrengthLabel()}
+                </Text>
+              ) : (
+                <Text style={styles.passwordHint}>
+                  Password must be at least 8 characters
+                </Text>
+              )}
+            </View>
+
+            <Button 
+              title="Create Account" 
+              onPress={handleSignUp} 
+              loading={loading} 
+              style={styles.signUpButton}
+            />
+          </Animated.View>
+
+          <Animated.View
+            style={[
+              styles.socialSection,
+              {
+                opacity: socialFadeAnim,
+                transform: [{ translateY: socialSlideAnim }]
+              }
+            ]}
+          >
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />
               <Text style={styles.dividerText}>OR</Text>
@@ -180,30 +397,37 @@ const SignUpScreen = () => {
             <View style={styles.socialButtons}>
               <OAuthButton provider="google" onPress={() => handleOAuthSignUp("oauth_google")} />
               <OAuthButton provider="apple" onPress={() => handleOAuthSignUp("oauth_apple")} />
+              <OAuthButton provider="facebook" onPress={() => handleOAuthSignUp("oauth_facebook")} />
             </View>
-          </>
-        )}
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("SignIn")}>
-            <Text style={styles.footerLink}>Sign In</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
-  )
-}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate("SignIn")}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.footerLink}>Sign In</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
     backgroundColor: "#FFFFFF",
+  },
+  container: {
+    flex: 1,
   },
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 60,
+    paddingTop: Platform.OS === 'android' ? 40 : 20,
     paddingBottom: 40,
   },
   loadingContainer: {
@@ -211,27 +435,85 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  loadingIndicator: {
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#6C47FF",
+    fontWeight: "500",
+  },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 32,
+  },
+  logoContainer: {
+    marginBottom: 24,
+    shadowColor: "#6C47FF",
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoBackground: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   logo: {
-    width: 80,
-    height: 80,
-    marginBottom: 24,
+    width: 60,
+    height: 60,
+    tintColor: '#FFFFFF',
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#1A1A1A",
-    marginBottom: 8,
+    marginBottom: 12,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: "#666666",
+    textAlign: 'center',
+    maxWidth: '80%',
+    lineHeight: 22,
   },
-  form: {
-    marginBottom: 24,
+  formCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 32,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 16,
+    elevation: 4,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF0F0',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF3B30',
+  },
+  errorText: {
+    color: "#FF3B30",
+    marginLeft: 8,
+    flex: 1,
+    fontSize: 14,
   },
   nameRow: {
     flexDirection: "row",
@@ -240,22 +522,37 @@ const styles = StyleSheet.create({
   nameField: {
     width: "48%",
   },
-  errorText: {
-    color: "#FF3B30",
+  inputContainer: {
     marginBottom: 16,
-    textAlign: "center",
+  },
+  passwordStrengthContainer: {
+    marginBottom: 24,
+  },
+  passwordStrengthBars: {
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  passwordStrengthBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 2,
+    marginHorizontal: 2,
+  },
+  passwordStrengthText: {
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'right',
   },
   passwordHint: {
     color: "#666666",
     fontSize: 12,
-    marginTop: -16,
-    marginBottom: 24,
-    marginLeft: 4,
+    textAlign: 'right',
   },
-  verificationText: {
+  signUpButton: {
+    marginTop: 8,
+  },
+  socialSection: {
     marginBottom: 24,
-    textAlign: "center",
-    color: "#666666",
   },
   dividerContainer: {
     flexDirection: "row",
@@ -269,25 +566,31 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     marginHorizontal: 16,
-    color: "#666666",
+    color: "#888888",
     fontSize: 14,
+    fontWeight: "600",
   },
   socialButtons: {
-    marginBottom: 40,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 32,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: 'center',
+    paddingVertical: 8,
   },
   footerText: {
     color: "#666666",
-    fontSize: 14,
+    fontSize: 15,
   },
   footerLink: {
     color: "#6C47FF",
-    fontSize: 14,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "700",
   },
-})
+});
 
-export default SignUpScreen
+export default SignUpScreen;

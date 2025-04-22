@@ -1,39 +1,129 @@
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from "react-native"
+import React from 'react';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Animated, Pressable } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
 
-const Button = ({ title, loading = false, variant = "primary", style, ...props }) => {
-  return (
-    <TouchableOpacity
-      style={[styles.button, variant === "secondary" ? styles.secondaryButton : styles.primaryButton, style]}
-      disabled={loading}
-      {...props}
-    >
+const Button = ({ 
+  title, 
+  loading = false, 
+  variant = "primary", 
+  style, 
+  textStyle,
+  ...props 
+}) => {
+  const animatedScale = new Animated.Value(1);
+  
+  const handlePressIn = () => {
+    Animated.spring(animatedScale, {
+      toValue: 0.97,
+      useNativeDriver: true,
+    }).start();
+  };
+  
+  const handlePressOut = () => {
+    Animated.spring(animatedScale, {
+      toValue: 1,
+      friction: 4,
+      tension: 40,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const isPrimary = variant === "primary";
+  
+  const ButtonContent = () => (
+    <>
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#FFFFFF" : "#6C47FF"} />
+        <ActivityIndicator color={isPrimary ? "#FFFFFF" : "#6C47FF"} />
       ) : (
-        <Text style={[styles.text, variant === "secondary" ? styles.secondaryText : styles.primaryText]}>{title}</Text>
+        <Text 
+          style={[
+            styles.text, 
+            isPrimary ? styles.primaryText : styles.secondaryText,
+            textStyle
+          ]}
+        >
+          {title}
+        </Text>
       )}
-    </TouchableOpacity>
-  )
-}
+    </>
+  );
+
+  return (
+    <Pressable
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+      disabled={loading || props.disabled}
+      onPress={props.onPress}
+      style={({ pressed }) => [
+        { opacity: (props.disabled && !loading) ? 0.6 : 1 }
+      ]}
+    >
+      <Animated.View
+        style={[
+          styles.buttonContainer,
+          { transform: [{ scale: animatedScale }] },
+          style
+        ]}
+      >
+        {isPrimary ? (
+          <LinearGradient
+            colors={['#7C5AFF', '#6C47FF']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={[
+              styles.button,
+              styles.primaryButton,
+            ]}
+          >
+            <ButtonContent />
+          </LinearGradient>
+        ) : (
+          <Animated.View 
+            style={[
+              styles.button, 
+              styles.secondaryButton,
+            ]}
+          >
+            <ButtonContent />
+          </Animated.View>
+        )}
+      </Animated.View>
+    </Pressable>
+  );
+};
 
 const styles = StyleSheet.create({
+  buttonContainer: {
+    borderRadius: 16,
+    marginVertical: 8,
+    shadowColor: "#6C47FF",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 4,
+  },
   button: {
-    borderRadius: 12,
+    borderRadius: 16,
     paddingVertical: 16,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 56,
   },
   primaryButton: {
     backgroundColor: "#6C47FF",
   },
   secondaryButton: {
     backgroundColor: "transparent",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#6C47FF",
   },
   text: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "700",
+    letterSpacing: 0.3,
   },
   primaryText: {
     color: "#FFFFFF",
@@ -41,6 +131,6 @@ const styles = StyleSheet.create({
   secondaryText: {
     color: "#6C47FF",
   },
-})
+});
 
-export default Button
+export default Button;

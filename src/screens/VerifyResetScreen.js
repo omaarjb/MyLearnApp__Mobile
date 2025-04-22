@@ -4,7 +4,6 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  ActivityIndicator, 
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -12,22 +11,25 @@ import {
   Animated,
   StatusBar
 } from 'react-native';
-import { useSignUp } from '@clerk/clerk-expo';
-import { useNavigation } from "@react-navigation/native";
+import { useSignIn } from '@clerk/clerk-expo';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import VerificationCodeInput from '../components/ui/VerificationCodeInput';
+import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
 
-export default function VerifyEmailScreen({ route }) {
-  const { email } = route.params;
-  const { signUp, setActive, isLoaded } = useSignUp();
+const VerifyResetScreen = () => {
   const [code, setCode] = useState('');
-  const [error, setError] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const { signIn } = useSignIn();
+  const route = useRoute();
   const navigation = useNavigation();
+  const { email } = route.params;
   
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,41 +57,56 @@ export default function VerifyEmailScreen({ route }) {
     }
   }, [countdown]);
 
-  const onVerify = async () => {
-    if (!isLoaded) return;
-    if (code.length < 6) {
+  const handleVerify = async () => {
+    if (!code || code.length < 6) {
       setError('Please enter the complete verification code');
       return;
     }
     
+    if (!newPassword) {
+      setError('Please enter your new password');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError('Password must be at least 8 characters');
+      return;
+    }
+
     setLoading(true);
     setError('');
-
+    
     try {
-      const result = await signUp.attemptEmailAddressVerification({ code });
+      const result = await signIn.attemptFirstFactor({
+        strategy: 'reset_password_email_code',
+        code,
+        password: newPassword,
+      });
       
       if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-        navigation.navigate("Home");
-      } else {
-        setError("Verification failed - unexpected result status");
+        navigation.navigate('SignIn', { 
+          successMessage: 'Password reset successfully! Please sign in with your new password' 
+        });
       }
     } catch (err) {
-      console.error("Verification error:", err);
-      setError(err.errors?.[0]?.message || "Verification failed");
+      console.error('Verification error:', err);
+      setError(err.errors?.[0]?.message || 'Failed to reset password');
     } finally {
       setLoading(false);
     }
   };
 
   const resendCode = async () => {
-    if (!isLoaded || countdown > 0) return;
+    if (countdown > 0) return;
     
     setResendLoading(true);
     setError('');
 
     try {
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+      await signIn.create({
+        strategy: 'reset_password_email_code',
+        identifier: email,
+      });
       setCountdown(60); // Start 60 second countdown
     } catch (err) {
       setError(err.errors?.[0]?.message || "Failed to resend code");
@@ -97,14 +114,6 @@ export default function VerifyEmailScreen({ route }) {
       setResendLoading(false);
     }
   };
-
-  if (!isLoaded) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6C47FF" />
-      </View>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -138,13 +147,13 @@ export default function VerifyEmailScreen({ route }) {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <MaterialCommunityIcons name="email-check-outline" size={32} color="#FFFFFF" />
+                <MaterialCommunityIcons name="lock-reset" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
             
-            <Text style={styles.title}>Verify Your Email</Text>
+            <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
-              We've sent a verification code to{'\n'}
+              Enter the verification code sent to{'\n'}
               <Text style={styles.emailText}>{email}</Text>
             </Text>
             
@@ -156,7 +165,7 @@ export default function VerifyEmailScreen({ route }) {
                 </View>
               ) : null}
               
-              <Text style={styles.inputLabel}>Enter verification code</Text>
+              <Text style={styles.inputLabel}>Verification Code</Text>
               <VerificationCodeInput
                 value={code}
                 onChangeText={setCode}
@@ -164,9 +173,18 @@ export default function VerifyEmailScreen({ route }) {
                 autoFocus
               />
               
+              <Input
+                label="New Password"
+                value={newPassword}
+                onChangeText={setNewPassword}
+                placeholder="Enter your new password"
+                secureTextEntry
+                icon="lock-outline"
+              />
+              
               <Button 
-                title="Verify Email" 
-                onPress={onVerify} 
+                title="Reset Password" 
+                onPress={handleVerify} 
                 loading={loading} 
               />
               
@@ -193,14 +211,14 @@ export default function VerifyEmailScreen({ route }) {
               onPress={() => navigation.goBack()}
               activeOpacity={0.7}
             >
-              <Text style={styles.backButtonText}>← Back to Sign Up</Text>
+              <Text style={styles.backButtonText}>← Back to Reset</Text>
             </TouchableOpacity>
           </Animated.View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -220,11 +238,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   iconContainer: {
     marginBottom: 24,
@@ -329,3 +342,5 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 });
+
+export default VerifyResetScreen;

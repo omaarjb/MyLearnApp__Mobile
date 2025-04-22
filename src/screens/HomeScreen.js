@@ -1,8 +1,8 @@
-"use client"
 
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native"
 import { useAuth, useUser } from "@clerk/clerk-expo"
 import { useNavigation } from "@react-navigation/native"
+import { clearSession } from "../utils/session"
 
 const HomeScreen = () => {
   const { signOut } = useAuth()
@@ -10,9 +10,16 @@ const HomeScreen = () => {
   const navigation = useNavigation()
 
   const handleSignOut = async () => {
-    await signOut()
-    navigation.navigate("SignIn")
-  }
+    try {
+      await clearSession(signOut); // Pass signOut as parameter
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'SignIn' }]
+      });
+    } catch (err) {
+      console.error('Sign out failed:', err);
+    }
+  };
 
   return (
     <View style={styles.container}>
