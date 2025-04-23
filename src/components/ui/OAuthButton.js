@@ -27,6 +27,13 @@ const OAuthButton = ({ provider, onPress }) => {
           gradientColors: ['#1877F2', '#0D5DC1'],
           shadowColor: 'rgba(24, 119, 242, 0.5)',
         }
+      case "github":
+        return {
+          iconName: "github",
+          color: "#FFFFFF",
+          gradientColors: ['#333333', '#000000'],
+          shadowColor: 'rgba(51, 51, 51, 0.5)',
+        }
       default:
         return {
           iconName: "account",

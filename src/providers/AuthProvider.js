@@ -1,51 +1,41 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState } from "react"
-import { useAuth, useUser } from "@clerk/clerk-expo"
-import { useNavigation } from "@react-navigation/native"
+import { createContext, useContext, useState } from "react"
+import { StyleSheet } from "react-native"
+import { useUser, useAuth } from "@clerk/clerk-expo"
 
-const AuthContext = createContext({
-  isLoading: true,
-  isSignedIn: false,
-})
+// Create context
+const AuthContext = createContext(null)
 
+// Hook to use the auth context
 export const useAuthContext = () => useContext(AuthContext)
 
 const AuthProvider = ({ children }) => {
-  const { isLoaded, isSignedIn } = useAuth()
-  const { user } = useUser()
-  const [isLoading, setIsLoading] = useState(true)
-  const navigation = useNavigation()
+  const { isLoaded: isUserLoaded, user } = useUser()
+  const { isLoaded: isAuthLoaded, isSignedIn } = useAuth()
+  const [isChecking, setIsChecking] = useState(true)
 
-  useEffect(() => {
-    if (!isLoaded) return
-
-    const checkAuth = async () => {
-      setIsLoading(true)
-
-      if (isSignedIn && user) {
-        // Use setTimeout to ensure navigation happens after render
-        setTimeout(() => {
-          navigation.navigate("Home")
-        }, 0)
-      } else {
-        setTimeout(() => {
-          navigation.navigate("SignIn")
-        }, 0)
-      }
-
-      setIsLoading(false)
-    }
-
-    checkAuth()
-  }, [isLoaded, isSignedIn, user, navigation])
-
-  const value = {
-    isLoading: isLoading || !isLoaded,
-    isSignedIn: isSignedIn || false,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  // Provide auth context values
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isSignedIn,
+        isLoaded: isUserLoaded && isAuthLoaded,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+})
 
 export default AuthProvider

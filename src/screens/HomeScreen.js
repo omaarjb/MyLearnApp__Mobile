@@ -1,13 +1,37 @@
-
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native"
+import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler } from "react-native"
 import { useAuth, useUser } from "@clerk/clerk-expo"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useFocusEffect } from "@react-navigation/native"
 import { clearSession } from "../utils/session"
+import { useEffect, useCallback } from "react"
 
 const HomeScreen = () => {
   const { signOut } = useAuth()
   const { user } = useUser()
   const navigation = useNavigation()
+
+  // Prevent going back to sign-in screen after logging in
+  useFocusEffect(
+    useCallback(() => {
+      // Disable the back button when this screen is focused
+      const onBackPress = () => {
+        return true; // Return true to prevent default behavior (going back)
+      };
+      
+      // Add event listener for hardware back button press
+      BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      
+      // Cleanup function to remove the event listener when the component unmounts
+      return () => BackHandler.removeEventListener('hardwareBackPress', onBackPress);
+    }, [])
+  );
+
+  // Set navigation options to hide back button in header
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => null, // This removes the back button from header
+      gestureEnabled: false,  // This disables swipe-back gesture on iOS
+    });
+  }, [navigation]);
 
   const handleSignOut = async () => {
     try {

@@ -136,6 +136,7 @@ const SignInScreen = () => {
   const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
   const { startOAuthFlow: startAppleOAuthFlow } = useOAuth({ strategy: 'oauth_apple' });
   const { startOAuthFlow: startFacebookOAuthFlow } = useOAuth({ strategy: 'oauth_facebook' });
+  const { startOAuthFlow: startGithubOAuthFlow } = useOAuth({ strategy: 'oauth_github' });
 
   const handleOAuthSignIn = useCallback(async (strategy) => {
     if (!isLoaded) return;
@@ -148,6 +149,7 @@ const SignInScreen = () => {
         oauth_google: startGoogleOAuthFlow,
         oauth_apple: startAppleOAuthFlow,
         oauth_facebook: startFacebookOAuthFlow,
+        oauth_github: startGithubOAuthFlow,
       }[strategy];
 
       const { createdSessionId } = await authFlow();
@@ -294,6 +296,7 @@ const SignInScreen = () => {
               <OAuthButton provider="google" onPress={() => handleOAuthSignIn("oauth_google")} />
               <OAuthButton provider="apple" onPress={() => handleOAuthSignIn("oauth_apple")} />
               <OAuthButton provider="facebook" onPress={() => handleOAuthSignIn("oauth_facebook")} />
+              <OAuthButton provider="github" onPress={() => handleOAuthSignIn("oauth_github")} />
             </View>
 
             <View style={styles.footer}>

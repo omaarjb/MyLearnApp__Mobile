@@ -1,4 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+"use client"
+
+import { useState, useRef, useEffect } from "react"
 import {
   View,
   Text,
@@ -13,45 +15,45 @@ import {
   StatusBar,
   SafeAreaView,
   Dimensions,
-} from "react-native";
-import { useSignUp } from "@clerk/clerk-expo";
-import { useNavigation } from "@react-navigation/native";
-import * as WebBrowser from "expo-web-browser";
-import { makeRedirectUri } from "expo-auth-session";
-import { LinearGradient } from "expo-linear-gradient";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+} from "react-native"
+import { useSignUp, useOAuth } from "@clerk/clerk-expo"
+import { useNavigation } from "@react-navigation/native"
+import * as WebBrowser from "expo-web-browser"
+import { makeRedirectUri } from "expo-auth-session"
+import { LinearGradient } from "expo-linear-gradient"
+import { MaterialCommunityIcons } from "@expo/vector-icons"
 
-import Input from "../components/ui/Input";
-import Button from "../components/ui/Button";
-import OAuthButton from "../components/ui/OAuthButton";
+import Input from "../components/ui/Input"
+import Button from "../components/ui/Button"
+import OAuthButton from "../components/ui/OAuthButton"
 
-WebBrowser.maybeCompleteAuthSession();
+WebBrowser.maybeCompleteAuthSession()
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get("window")
 
 const SignUpScreen = () => {
   // Animation values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const formFadeAnim = useRef(new Animated.Value(0)).current;
-  const formSlideAnim = useRef(new Animated.Value(50)).current;
-  const socialFadeAnim = useRef(new Animated.Value(0)).current;
-  const socialSlideAnim = useRef(new Animated.Value(50)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current
+  const slideAnim = useRef(new Animated.Value(30)).current
+  const formFadeAnim = useRef(new Animated.Value(0)).current
+  const formSlideAnim = useRef(new Animated.Value(50)).current
+  const socialFadeAnim = useRef(new Animated.Value(0)).current
+  const socialSlideAnim = useRef(new Animated.Value(50)).current
 
   // Hooks and state
-  const { signUp, setActive, isLoaded } = useSignUp();
-  const navigation = useNavigation();
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [passwordStrength, setPasswordStrength] = useState(0);
+  const { signUp, setActive, isLoaded } = useSignUp()
+  const navigation = useNavigation()
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [passwordStrength, setPasswordStrength] = useState(0)
 
   const redirectUrl = makeRedirectUri({
     preferLocalhost: true,
-  });
+  })
 
   // Start animations
   useEffect(() => {
@@ -67,7 +69,7 @@ const SignUpScreen = () => {
             toValue: 0,
             duration: 800,
             useNativeDriver: true,
-          })
+          }),
         ]),
         Animated.parallel([
           Animated.timing(formFadeAnim, {
@@ -79,7 +81,7 @@ const SignUpScreen = () => {
             toValue: 0,
             duration: 600,
             useNativeDriver: true,
-          })
+          }),
         ]),
         Animated.parallel([
           Animated.timing(socialFadeAnim, {
@@ -91,85 +93,85 @@ const SignUpScreen = () => {
             toValue: 0,
             duration: 600,
             useNativeDriver: true,
-          })
-        ])
-      ]).start();
+          }),
+        ]),
+      ]).start()
     }
-  }, [isLoaded]);
+  }, [isLoaded])
 
   // Password strength checker
   useEffect(() => {
     if (!password) {
-      setPasswordStrength(0);
-      return;
+      setPasswordStrength(0)
+      return
     }
 
-    let strength = 0;
-    
+    let strength = 0
+
     // Length check
-    if (password.length >= 8) strength += 1;
-    
+    if (password.length >= 8) strength += 1
+
     // Contains uppercase
-    if (/[A-Z]/.test(password)) strength += 1;
-    
+    if (/[A-Z]/.test(password)) strength += 1
+
     // Contains lowercase
-    if (/[a-z]/.test(password)) strength += 1;
-    
+    if (/[a-z]/.test(password)) strength += 1
+
     // Contains number
-    if (/[0-9]/.test(password)) strength += 1;
-    
+    if (/[0-9]/.test(password)) strength += 1
+
     // Contains special character
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    
-    setPasswordStrength(strength);
-  }, [password]);
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1
+
+    setPasswordStrength(strength)
+  }, [password])
 
   const getPasswordStrengthLabel = () => {
-    if (!password) return "";
-    if (passwordStrength <= 1) return "Weak";
-    if (passwordStrength <= 3) return "Medium";
-    return "Strong";
-  };
+    if (!password) return ""
+    if (passwordStrength <= 1) return "Weak"
+    if (passwordStrength <= 3) return "Medium"
+    return "Strong"
+  }
 
   const getPasswordStrengthColor = () => {
-    if (!password) return "#E5E5E5";
-    if (passwordStrength <= 1) return "#FF3B30";
-    if (passwordStrength <= 3) return "#FFCC00";
-    return "#34C759";
-  };
+    if (!password) return "#E5E5E5"
+    if (passwordStrength <= 1) return "#FF3B30"
+    if (passwordStrength <= 3) return "#FFCC00"
+    return "#34C759"
+  }
 
   const handleSignUp = async () => {
-    if (!isLoaded) return;
+    if (!isLoaded) return
 
     // Basic validation
     if (!firstName.trim()) {
-      setError("First name is required");
-      return;
+      setError("First name is required")
+      return
     }
-    
+
     if (!lastName.trim()) {
-      setError("Last name is required");
-      return;
+      setError("Last name is required")
+      return
     }
-    
+
     if (!email.trim()) {
-      setError("Email is required");
-      return;
+      setError("Email is required")
+      return
     }
-    
+
     if (!password) {
-      setError("Password is required");
-      return;
+      setError("Password is required")
+      return
     }
-    
+
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
+      setError("Password must be at least 8 characters")
+      return
     }
-  
-    setLoading(true);
-    setError("");
-  
+
+    setLoading(true)
+    setError("")
+
     try {
       // Create the sign-up attempt
       await signUp.create({
@@ -177,116 +179,109 @@ const SignUpScreen = () => {
         lastName,
         emailAddress: email,
         password,
-      });
-  
+      })
+
       // Prepare email verification
-      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
-      
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" })
+
       // Navigate to verification screen
-      navigation.navigate("VerifyEmail", { email });
-      
+      navigation.navigate("VerifyEmail", { email })
     } catch (err) {
-      console.error("Sign up error:", err);
-      setError(err.errors?.[0]?.message || "Something went wrong");
+      console.error("Sign up error:", err)
+      setError(err.errors?.[0]?.message || "Something went wrong")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   // OAuth providers setup
+  const { startOAuthFlow: startGoogleOAuthFlow } = useOAuth({ strategy: "oauth_google" })
+  const { startOAuthFlow: startAppleOAuthFlow } = useOAuth({ strategy: "oauth_apple" })
+  const { startOAuthFlow: startFacebookOAuthFlow } = useOAuth({ strategy: "oauth_facebook" })
+  const { startOAuthFlow: startGithubOAuthFlow } = useOAuth({ strategy: "oauth_github" })
   const handleOAuthSignUp = async (strategy) => {
-    if (!isLoaded) return;
-    
-    try {
-      setLoading(true);
-      setError("");
-      
-      const result = await signUp.authenticateWithRedirect({
-        strategy,
-        redirectUrl,
-        redirectUrlComplete: redirectUrl,
-      });
+    if (!isLoaded) return
 
-      const { createdSessionId } = result;
+    try {
+      setLoading(true)
+      setError("")
+
+      const authFlow = {
+        oauth_google: startGoogleOAuthFlow,
+        oauth_apple: startAppleOAuthFlow,
+        oauth_facebook: startFacebookOAuthFlow,
+        oauth_github: startGithubOAuthFlow,
+      }[strategy]
+
+      const { createdSessionId } = await authFlow()
+
       if (createdSessionId) {
-        await setActive({ session: createdSessionId });
-        navigation.navigate("Home");
+        await setActive({ session: createdSessionId })
+        navigation.navigate("RoleSelection")
       }
     } catch (err) {
-      console.error(`${strategy} OAuth error:`, err);
-      setError(err.errors?.[0]?.message || "OAuth sign up failed. Please try again.");
+      console.error(`${strategy} OAuth error:`, err)
+      setError("OAuth sign up failed. Please try again.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   // Loading state
   if (!isLoaded) {
     return (
       <View style={styles.loadingContainer}>
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-        <LinearGradient
-          colors={['#f7f9ff', '#ffffff']}
-          style={StyleSheet.absoluteFill}
-        />
+        <LinearGradient colors={["#f7f9ff", "#ffffff"]} style={StyleSheet.absoluteFill} />
         <View style={styles.loadingIndicator}>
           <ActivityIndicator size="large" color="#6C47FF" />
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       </View>
-    );
+    )
   }
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <LinearGradient
-        colors={['#f7f9ff', '#ffffff']}
-        style={StyleSheet.absoluteFill}
-      />
-      
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      <LinearGradient colors={["#f7f9ff", "#ffffff"]} style={StyleSheet.absoluteFill} />
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
         keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
       >
-        <ScrollView 
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false}
-        >
-          <Animated.View 
+        <ScrollView contentContainerStyle={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+          <Animated.View
             style={[
               styles.header,
               {
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }]
-              }
+                transform: [{ translateY: slideAnim }],
+              },
             ]}
           >
             <View style={styles.logoContainer}>
               <LinearGradient
-                colors={['#7C5AFF', '#6C47FF']}
+                colors={["#7C5AFF", "#6C47FF"]}
                 style={styles.logoBackground}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Image 
-                  source={{ uri: "/placeholder.svg?height=80&width=80" }} 
-                  style={styles.logo} 
-                />
+                <Image source={{ uri: "/placeholder.svg?height=80&width=80" }} style={styles.logo} />
               </LinearGradient>
             </View>
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join MyLearn and start your learning journey</Text>
           </Animated.View>
 
-          <Animated.View 
+          <Animated.View
             style={[
               styles.formCard,
               {
                 opacity: formFadeAnim,
-                transform: [{ translateY: formSlideAnim }]
-              }
+                transform: [{ translateY: formSlideAnim }],
+              },
             ]}
           >
             {error ? (
@@ -342,41 +337,27 @@ const SignUpScreen = () => {
             <View style={styles.passwordStrengthContainer}>
               <View style={styles.passwordStrengthBars}>
                 {[1, 2, 3, 4, 5].map((index) => (
-                  <View 
+                  <View
                     key={index}
                     style={[
                       styles.passwordStrengthBar,
-                      { 
-                        backgroundColor: passwordStrength >= index 
-                          ? getPasswordStrengthColor() 
-                          : '#E5E5E5' 
-                      }
+                      {
+                        backgroundColor: passwordStrength >= index ? getPasswordStrengthColor() : "#E5E5E5",
+                      },
                     ]}
                   />
                 ))}
               </View>
               {password ? (
-                <Text 
-                  style={[
-                    styles.passwordStrengthText,
-                    { color: getPasswordStrengthColor() }
-                  ]}
-                >
+                <Text style={[styles.passwordStrengthText, { color: getPasswordStrengthColor() }]}>
                   {getPasswordStrengthLabel()}
                 </Text>
               ) : (
-                <Text style={styles.passwordHint}>
-                  Password must be at least 8 characters
-                </Text>
+                <Text style={styles.passwordHint}>Password must be at least 8 characters</Text>
               )}
             </View>
 
-            <Button 
-              title="Create Account" 
-              onPress={handleSignUp} 
-              loading={loading} 
-              style={styles.signUpButton}
-            />
+            <Button title="Create Account" onPress={handleSignUp} loading={loading} style={styles.signUpButton} />
           </Animated.View>
 
           <Animated.View
@@ -384,8 +365,8 @@ const SignUpScreen = () => {
               styles.socialSection,
               {
                 opacity: socialFadeAnim,
-                transform: [{ translateY: socialSlideAnim }]
-              }
+                transform: [{ translateY: socialSlideAnim }],
+              },
             ]}
           >
             <View style={styles.dividerContainer}>
@@ -398,14 +379,12 @@ const SignUpScreen = () => {
               <OAuthButton provider="google" onPress={() => handleOAuthSignUp("oauth_google")} />
               <OAuthButton provider="apple" onPress={() => handleOAuthSignUp("oauth_apple")} />
               <OAuthButton provider="facebook" onPress={() => handleOAuthSignUp("oauth_facebook")} />
+              <OAuthButton provider="github" onPress={() => handleOAuthSignUp("oauth_github")} />
             </View>
 
             <View style={styles.footer}>
               <Text style={styles.footerText}>Already have an account? </Text>
-              <TouchableOpacity 
-                onPress={() => navigation.navigate("SignIn")}
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity onPress={() => navigation.navigate("SignIn")} activeOpacity={0.7}>
                 <Text style={styles.footerLink}>Sign In</Text>
               </TouchableOpacity>
             </View>
@@ -413,8 +392,8 @@ const SignUpScreen = () => {
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -427,7 +406,7 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 40 : 20,
+    paddingTop: Platform.OS === "android" ? 40 : 20,
     paddingBottom: 40,
   },
   loadingContainer: {
@@ -436,7 +415,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   loadingIndicator: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
     marginTop: 12,
@@ -463,30 +442,30 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   logo: {
     width: 60,
     height: 60,
-    tintColor: '#FFFFFF',
+    tintColor: "#FFFFFF",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#1A1A1A",
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   subtitle: {
     fontSize: 16,
     color: "#666666",
-    textAlign: 'center',
-    maxWidth: '80%',
+    textAlign: "center",
+    maxWidth: "80%",
     lineHeight: 22,
   },
   formCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 24,
     padding: 24,
     marginBottom: 32,
@@ -500,14 +479,14 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF0F0',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF0F0",
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
     borderLeftWidth: 4,
-    borderLeftColor: '#FF3B30',
+    borderLeftColor: "#FF3B30",
   },
   errorText: {
     color: "#FF3B30",
@@ -529,7 +508,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   passwordStrengthBars: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 8,
   },
   passwordStrengthBar: {
@@ -540,13 +519,13 @@ const styles = StyleSheet.create({
   },
   passwordStrengthText: {
     fontSize: 12,
-    fontWeight: '600',
-    textAlign: 'right',
+    fontWeight: "600",
+    textAlign: "right",
   },
   passwordHint: {
     color: "#666666",
     fontSize: 12,
-    textAlign: 'right',
+    textAlign: "right",
   },
   signUpButton: {
     marginTop: 8,
@@ -571,15 +550,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 32,
   },
   footer: {
     flexDirection: "row",
     justifyContent: "center",
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 8,
   },
   footerText: {
@@ -591,6 +570,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
-});
+})
 
-export default SignUpScreen;
+export default SignUpScreen
