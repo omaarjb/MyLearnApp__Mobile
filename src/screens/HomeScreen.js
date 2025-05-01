@@ -21,7 +21,8 @@ import { Feather } from "@expo/vector-icons"
 import { Keyboard, TouchableWithoutFeedback } from "react-native"
 import { ProfileCard } from "../components/profile-card"
 import  {apiUrl}  from "../api/apiUrl"
-import QuizCard from "../components/quiz-card" // Import the QuizCard component
+import QuizCard from "../components/quiz-card" 
+import StatsScreen from "./StatsScreen" 
 
 const { width } = Dimensions.get("window")
 const SIDEBAR_WIDTH = 250
@@ -335,7 +336,12 @@ const HomeScreen = () => {
                 </TouchableOpacity>
               </View>
             ) : (
-              <ScrollView showsVerticalScrollIndicator={false} style={styles.quizListContainer}>
+              <ScrollView 
+        style={styles.contentScrollView}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={Keyboard.dismiss}
+        showsVerticalScrollIndicator={false}
+      >
                 <View style={styles.quizCardsContainer}>
                   {filteredQuizzes.map((quiz) => (
                     <QuizCard key={quiz.id} quiz={quiz} onPress={startQuiz} />
@@ -361,13 +367,11 @@ const HomeScreen = () => {
       case "statistics":
         return (
           <View style={styles.contentContainer}>
-            <Text style={styles.contentTitle}>Statistics</Text>
-            <View style={styles.emptyStateContainer}>
-              <Feather name="bar-chart-2" size={50} color="#CCCCCC" />
-              <Text style={styles.emptyStateText}>No statistics available yet</Text>
-              <Text style={styles.emptyStateSubText}>Complete quizzes to see your progress</Text>
-            </View>
-          </View>
+            <Text style={styles.contentTitle}>Mes Statistiques</Text>
+            
+              <StatsScreen />
+            
+        </View>
         )
       case "profile":
         return (
@@ -456,7 +460,7 @@ const HomeScreen = () => {
       </Animated.View>
 
       {/* Main Content */}
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+      
       <View style={styles.mainContent}>
         <View style={styles.header}>
           {/* Menu toggle button */}
@@ -470,7 +474,7 @@ const HomeScreen = () => {
 
         {renderContent()}
       </View>
-      </TouchableWithoutFeedback>
+      
     </View>
   )
 }
@@ -595,6 +599,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
+    
   },
   contentTitle: {
     fontSize: 24,

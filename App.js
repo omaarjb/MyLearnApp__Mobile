@@ -17,6 +17,7 @@ import ProfesseurHomeScreen from "./src/screens/professeur-home-screen"
 import RouteGuard from "./src/components/RouteGuard"
 import QuizScreen from "./src/screens/quiz-screen"
 import QuizResultsScreen from "./src/screens/quiz-results-screen"
+import StatsScreen from "./src/screens/StatsScreen"
 
 // Replace with your publishable key from Clerk Dashboard
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
@@ -54,6 +55,12 @@ const ProtectedQuizResultsScreen = (props) => (
   </RouteGuard>
 )
 
+const ProtectedStatsScreen = (props) => (
+  <RouteGuard>
+    <StatsScreen {...props} />
+  </RouteGuard>
+)
+
 export default function App() {
   return (
     <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY} tokenCache={tokenCache}>
@@ -75,6 +82,9 @@ export default function App() {
               <Stack.Screen name="ProfesseurHome" component={ProtectedProfesseurHomeScreen} />
               <Stack.Screen name="Quiz" component={ProtectedQuizScreen} />
               <Stack.Screen name="QuizResults" component={ProtectedQuizResultsScreen} />
+              <Stack.Screen name="Stats" component={ProtectedStatsScreen} />
+
+              {/* Add more screens as needed */}
             </Stack.Navigator>
           </NavigationContainer>
         </AuthProvider>
