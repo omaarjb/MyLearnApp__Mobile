@@ -128,9 +128,9 @@ const SignUpScreen = () => {
 
   const getPasswordStrengthLabel = () => {
     if (!password) return ""
-    if (passwordStrength <= 1) return "Weak"
-    if (passwordStrength <= 3) return "Medium"
-    return "Strong"
+    if (passwordStrength <= 1) return "Faible"
+    if (passwordStrength <= 3) return "Moyen"
+    return "Fort"
   }
 
   const getPasswordStrengthColor = () => {
@@ -145,27 +145,27 @@ const SignUpScreen = () => {
 
     // Basic validation
     if (!firstName.trim()) {
-      setError("First name is required")
+      setError("Le prénom est requis")
       return
     }
 
     if (!lastName.trim()) {
-      setError("Last name is required")
+      setError("Le nom est requis")
       return
     }
 
     if (!email.trim()) {
-      setError("Email is required")
+      setError("L'email est requis")
       return
     }
 
     if (!password) {
-      setError("Password is required")
+      setError("Le mot de passe est requis")
       return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters")
+      setError("Le mot de passe doit contenir au moins 8 caractères")
       return
     }
 
@@ -188,7 +188,7 @@ const SignUpScreen = () => {
       navigation.navigate("VerifyEmail", { email })
     } catch (err) {
       console.error("Sign up error:", err)
-      setError(err.errors?.[0]?.message || "Something went wrong")
+      setError(err.errors?.[0]?.message || "Une erreur s'est produite")
     } finally {
       setLoading(false)
     }
@@ -221,7 +221,7 @@ const SignUpScreen = () => {
       }
     } catch (err) {
       console.error(`${strategy} OAuth error:`, err)
-      setError("OAuth sign up failed. Please try again.")
+      setError("Échec de l'inscription avec OAuth. Veuillez réessayer.")
     } finally {
       setLoading(false)
     }
@@ -235,7 +235,7 @@ const SignUpScreen = () => {
         <LinearGradient colors={["#f7f9ff", "#ffffff"]} style={StyleSheet.absoluteFill} />
         <View style={styles.loadingIndicator}>
           <ActivityIndicator size="large" color="#6C47FF" />
-          <Text style={styles.loadingText}>Loading...</Text>
+          <Text style={styles.loadingText}>Chargement...</Text>
         </View>
       </View>
     )
@@ -263,7 +263,7 @@ const SignUpScreen = () => {
           >
             <View style={styles.logoContainer}>
               <LinearGradient
-                colors={["#7C5AFF", "#6C47FF"]}
+                colors={['#7c3aed', '#db2777']}
                 style={styles.logoBackground}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -271,8 +271,8 @@ const SignUpScreen = () => {
                 <Image source={{ uri: "/placeholder.svg?height=80&width=80" }} style={styles.logo} />
               </LinearGradient>
             </View>
-            <Text style={styles.title}>Create Account</Text>
-            <Text style={styles.subtitle}>Join MyLearn and start your learning journey</Text>
+            <Text style={styles.title}>Créer un Compte</Text>
+            <Text style={styles.subtitle}>Rejoignez MyLearn et commencez votre parcours d'apprentissage</Text>
           </Animated.View>
 
           <Animated.View
@@ -294,30 +294,30 @@ const SignUpScreen = () => {
             <View style={styles.nameRow}>
               <View style={styles.nameField}>
                 <Input
-                  label="First Name"
+                  label="Prénom"
                   value={firstName}
                   onChangeText={setFirstName}
-                  placeholder="John"
+                  placeholder="Jean"
                   icon="account-outline"
                   containerStyle={styles.inputContainer}
                 />
               </View>
               <View style={styles.nameField}>
                 <Input
-                  label="Last Name"
+                  label="Nom"
                   value={lastName}
                   onChangeText={setLastName}
-                  placeholder="Doe"
+                  placeholder="Dupont"
                   containerStyle={styles.inputContainer}
                 />
               </View>
             </View>
 
             <Input
-              label="Email Address"
+              label="Adresse Email"
               value={email}
               onChangeText={setEmail}
-              placeholder="your.email@example.com"
+              placeholder="votre.email@exemple.com"
               keyboardType="email-address"
               autoCapitalize="none"
               icon="email-outline"
@@ -325,10 +325,10 @@ const SignUpScreen = () => {
             />
 
             <Input
-              label="Password"
+              label="Mot de Passe"
               value={password}
               onChangeText={setPassword}
-              placeholder="Create a secure password"
+              placeholder="Créez un mot de passe sécurisé"
               secureTextEntry
               icon="lock-outline"
               containerStyle={styles.inputContainer}
@@ -353,11 +353,11 @@ const SignUpScreen = () => {
                   {getPasswordStrengthLabel()}
                 </Text>
               ) : (
-                <Text style={styles.passwordHint}>Password must be at least 8 characters</Text>
+                <Text style={styles.passwordHint}>Le mot de passe doit contenir au moins 8 caractères</Text>
               )}
             </View>
 
-            <Button title="Create Account" onPress={handleSignUp} loading={loading} style={styles.signUpButton} />
+            <Button title="Créer un Compte" onPress={handleSignUp} loading={loading} style={styles.signUpButton} />
           </Animated.View>
 
           <Animated.View
@@ -371,7 +371,7 @@ const SignUpScreen = () => {
           >
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />
-              <Text style={styles.dividerText}>OR</Text>
+              <Text style={styles.dividerText}>OU</Text>
               <View style={styles.divider} />
             </View>
 
@@ -383,9 +383,9 @@ const SignUpScreen = () => {
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
+              <Text style={styles.footerText}>Déjà un compte? </Text>
               <TouchableOpacity onPress={() => navigation.navigate("SignIn")} activeOpacity={0.7}>
-                <Text style={styles.footerLink}>Sign In</Text>
+                <Text style={styles.footerLink}>Se Connecter</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -566,7 +566,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   footerLink: {
-    color: "#6C47FF",
+    color: "#7c3aed",
     fontSize: 15,
     fontWeight: "700",
   },

@@ -1,12 +1,27 @@
 "use client"
 
-import { View, Text, StyleSheet, TouchableOpacity, Image, BackHandler, Animated, Dimensions } from "react-native"
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  BackHandler,
+  Animated,
+  Dimensions,
+  ScrollView,
+  ActivityIndicator,
+  TextInput,
+} from "react-native"
 import { useAuth, useUser } from "@clerk/clerk-expo"
 import { useNavigation, useFocusEffect } from "@react-navigation/native"
 import { clearSession } from "../utils/session"
 import { useEffect, useCallback, useState, useRef } from "react"
 import { Feather } from "@expo/vector-icons"
+import { Keyboard, TouchableWithoutFeedback } from "react-native"
 import { ProfileCard } from "../components/profile-card"
+import  {apiUrl}  from "../api/apiUrl"
+import QuizCard from "../components/quiz-card" // Import the QuizCard component
 
 const { width } = Dimensions.get("window")
 const SIDEBAR_WIDTH = 250
@@ -15,8 +30,22 @@ const HomeScreen = () => {
   const { signOut } = useAuth()
   const { user } = useUser()
   const navigation = useNavigation()
-  const [activeSection, setActiveSection] = useState("profile")
+  const [activeSection, setActiveSection] = useState("home")
   const [sidebarVisible, setSidebarVisible] = useState(false)
+
+
+  // Quiz state
+  const [quizzes, setQuizzes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [filters, setFilters] = useState({
+    search: "",
+    difficulty: "",
+    category: "",
+    professor: "",
+  })
+  const [categories, setCategories] = useState([])
+  const [showFilters, setShowFilters] = useState(false)
 
   // Animation value for sidebar
   const sidebarPosition = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current
@@ -33,6 +62,36 @@ const HomeScreen = () => {
 
     setSidebarVisible(!sidebarVisible)
   }
+
+  // Fetch quizzes from API
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`${apiUrl}/quizzes`)
+
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        setQuizzes(data)
+
+        // Extract unique categories
+        const uniqueCategories = [...new Set(data.map((quiz) => quiz.category))].filter(Boolean)
+        setCategories(uniqueCategories)
+
+        setError(null)
+      } catch (err) {
+        setError("Unable to load quizzes. Please try again later.")
+        console.error("Error fetching quizzes:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchQuizzes()
+  }, [])
 
   // Prevent going back to sign-in screen after logging in
   useFocusEffect(
@@ -75,33 +134,246 @@ const HomeScreen = () => {
     }
   }
 
+  const startQuiz = (quiz) => {
+    // Navigate to quiz screen with quiz data
+    navigation.navigate("Quiz", { quiz })
+  }
+
+  const handleSearchChange = (text) => {
+    setFilters((prev) => ({ ...prev, search: text }))
+  }
+
+  const handleDifficultyFilter = (difficulty) => {
+    setFilters((prev) => ({
+      ...prev,
+      difficulty: prev.difficulty === difficulty ? "" : difficulty,
+    }))
+  }
+
+  const handleCategoryFilter = (category) => {
+    setFilters((prev) => ({
+      ...prev,
+      category: prev.category === category ? "" : category,
+    }))
+  }
+
+  const resetFilters = () => {
+    setFilters({
+      search: "",
+      difficulty: "",
+      category: "",
+      professor: "",
+    })
+  }
+
+  const filteredQuizzes = quizzes.filter((quiz) => {
+    // Search filter
+    if (
+      filters.search &&
+      !quiz.title.toLowerCase().includes(filters.search.toLowerCase()) &&
+      !quiz.description.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
+      return false
+    }
+
+    // Difficulty filter
+    if (filters.difficulty && quiz.difficulty !== filters.difficulty) {
+      return false
+    }
+
+    // Category filter
+    if (filters.category && quiz.category !== filters.category) {
+      return false
+    }
+
+    // Professor filter
+    if (
+      filters.professor &&
+      (!quiz.professor || `${quiz.professor.firstName} ${quiz.professor.lastName}` !== filters.professor)
+    ) {
+      return false
+    }
+
+    return true
+  })
+
   const renderContent = () => {
     switch (activeSection) {
-      case "profile":
+      case "home":
         return (
           <View style={styles.contentContainer}>
-            <Text style={styles.contentTitle}>My Profile</Text>
-            <ProfileCard />
+            <Text style={styles.contentTitle}>Explorer les Quiz</Text>
+
+            {/* Search and Filter UI */}
+            <View style={styles.searchContainer}>
+              <View style={styles.searchInputContainer}>
+                <Feather name="search" size={20} color="#666666" style={styles.searchIcon} />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Recherhcer les Quiz..."
+                  value={filters.search}
+                  onChangeText={handleSearchChange}
+                  placeholderTextColor="#999999"
+                />
+                {filters.search ? (
+                  <TouchableOpacity onPress={() => handleSearchChange("")}>
+                    <Feather name="x" size={20} color="#666666" />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              <TouchableOpacity
+                style={[styles.filterButton, (filters.difficulty || filters.category) && styles.activeFilterButton]}
+                onPress={() => setShowFilters(!showFilters)}
+              >
+                <Feather
+                  name="filter"
+                  size={20}
+                  color={filters.difficulty || filters.category ? "#FFFFFF" : "#666666"}
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Filter options */}
+            {showFilters && (
+              <View style={styles.filtersContainer}>
+                <View style={styles.filterSection}>
+                  <Text style={styles.filterSectionTitle}>Difficulté</Text>
+                  <View style={styles.filterOptions}>
+                    <TouchableOpacity
+                      style={[styles.filterOption, filters.difficulty === "Débutant" && styles.activeFilterOption]}
+                      onPress={() => handleDifficultyFilter("Débutant")}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          filters.difficulty === "Débutant" && styles.activeFilterOptionText,
+                        ]}
+                      >
+                        Débutant
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.filterOption, filters.difficulty === "Intermédiaire" && styles.activeFilterOption]}
+                      onPress={() => handleDifficultyFilter("Intermédiaire")}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          filters.difficulty === "Intermédiaire" && styles.activeFilterOptionText,
+                        ]}
+                      >
+                        Intermédiaire
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.filterOption, filters.difficulty === "Avancé" && styles.activeFilterOption]}
+                      onPress={() => handleDifficultyFilter("Avancé")}
+                    >
+                      <Text
+                        style={[
+                          styles.filterOptionText,
+                          filters.difficulty === "Avancé" && styles.activeFilterOptionText,
+                        ]}
+                      >
+                        Avancé
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {categories.length > 0 && (
+                  <View style={styles.filterSection}>
+                    <Text style={styles.filterSectionTitle}>Catégorie</Text>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesScroll}>
+                      <View style={styles.filterOptions}>
+                        {categories.map((category) => (
+                          <TouchableOpacity
+                            key={category}
+                            style={[styles.filterOption, filters.category === category && styles.activeFilterOption]}
+                            onPress={() => handleCategoryFilter(category)}
+                          >
+                            <Text
+                              style={[
+                                styles.filterOptionText,
+                                filters.category === category && styles.activeFilterOptionText,
+                              ]}
+                            >
+                              {category}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                    </ScrollView>
+                  </View>
+                )}
+
+                {(filters.difficulty || filters.category) && (
+                  <TouchableOpacity style={styles.resetFiltersButton} onPress={resetFilters}>
+                    <Text style={styles.resetFiltersText}>Resetaurer les filtres</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
+
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#6C47FF" />
+                <Text style={styles.loadingText}>Loading quizzes...</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Feather name="alert-circle" size={50} color="#FF6B6B" />
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : filteredQuizzes.length === 0 ? (
+              <View style={styles.emptyStateContainer}>
+                <Feather name="search" size={50} color="#CCCCCC" />
+                <Text style={styles.emptyStateText}>Aucun Quiz Trouvé !</Text>
+                <TouchableOpacity style={styles.emptyStateButton} onPress={resetFilters}>
+                  <Text style={styles.emptyStateButtonText}>Reset Filters</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false} style={styles.quizListContainer}>
+                <View style={styles.quizCardsContainer}>
+                  {filteredQuizzes.map((quiz) => (
+                    <QuizCard key={quiz.id} quiz={quiz} onPress={startQuiz} />
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        )
+      case "myquizzes":
+        return (
+          <View style={styles.contentContainer}>
+            <Text style={styles.contentTitle}>My Quizzes</Text>
+            <View style={styles.emptyStateContainer}>
+              <Feather name="book-open" size={50} color="#CCCCCC" />
+              <Text style={styles.emptyStateText}>You haven't taken any quizzes yet</Text>
+              <TouchableOpacity style={styles.emptyStateButton} onPress={() => handleMenuItemPress("home")}>
+                <Text style={styles.emptyStateButtonText}>Explore Quizzes</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )
       case "statistics":
         return (
           <View style={styles.contentContainer}>
             <Text style={styles.contentTitle}>Statistics</Text>
-            <View style={styles.statsCard}>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>42</Text>
-                <Text style={styles.statLabel}>Total Visits</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>7</Text>
-                <Text style={styles.statLabel}>Active Days</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statValue}>85%</Text>
-                <Text style={styles.statLabel}>Completion</Text>
-              </View>
+            <View style={styles.emptyStateContainer}>
+              <Feather name="bar-chart-2" size={50} color="#CCCCCC" />
+              <Text style={styles.emptyStateText}>No statistics available yet</Text>
+              <Text style={styles.emptyStateSubText}>Complete quizzes to see your progress</Text>
             </View>
+          </View>
+        )
+      case "profile":
+        return (
+          <View style={styles.contentContainer}>
+            <Text style={styles.contentTitle}>My Profile</Text>
+            <ProfileCard />
           </View>
         )
       default:
@@ -143,12 +415,20 @@ const HomeScreen = () => {
 
         <View style={styles.sidebarMenu}>
           <TouchableOpacity
-            style={[styles.sidebarMenuItem, activeSection === "profile" && styles.activeMenuItem]}
-            onPress={() => handleMenuItemPress("profile")}
+            style={[styles.sidebarMenuItem, activeSection === "home" && styles.activeMenuItem]}
+            onPress={() => handleMenuItemPress("home")}
           >
-            <Feather name="user" size={20} color={activeSection === "profile" ? "#6C47FF" : "#666666"} />
-            <Text style={[styles.sidebarMenuText, activeSection === "profile" && styles.activeMenuText]}>
-              My Profile
+            <Feather name="home" size={20} color={activeSection === "home" ? "#6C47FF" : "#666666"} />
+            <Text style={[styles.sidebarMenuText, activeSection === "home" && styles.activeMenuText]}>Home</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sidebarMenuItem, activeSection === "myquizzes" && styles.activeMenuItem]}
+            onPress={() => handleMenuItemPress("myquizzes")}
+          >
+            <Feather name="book-open" size={20} color={activeSection === "myquizzes" ? "#6C47FF" : "#666666"} />
+            <Text style={[styles.sidebarMenuText, activeSection === "myquizzes" && styles.activeMenuText]}>
+              My Quizzes
             </Text>
           </TouchableOpacity>
 
@@ -157,9 +437,15 @@ const HomeScreen = () => {
             onPress={() => handleMenuItemPress("statistics")}
           >
             <Feather name="bar-chart-2" size={20} color={activeSection === "statistics" ? "#6C47FF" : "#666666"} />
-            <Text style={[styles.sidebarMenuText, activeSection === "statistics" && styles.activeMenuText]}>
-              Statistics
-            </Text>
+            <Text style={[styles.sidebarMenuText, activeSection === "statistics" && styles.activeMenuText]}>Stats</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.sidebarMenuItem, activeSection === "profile" && styles.activeMenuItem]}
+            onPress={() => handleMenuItemPress("profile")}
+          >
+            <Feather name="user" size={20} color={activeSection === "profile" ? "#6C47FF" : "#666666"} />
+            <Text style={[styles.sidebarMenuText, activeSection === "profile" && styles.activeMenuText]}>Profile</Text>
           </TouchableOpacity>
         </View>
 
@@ -170,6 +456,7 @@ const HomeScreen = () => {
       </Animated.View>
 
       {/* Main Content */}
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <View style={styles.mainContent}>
         <View style={styles.header}>
           {/* Menu toggle button */}
@@ -183,6 +470,7 @@ const HomeScreen = () => {
 
         {renderContent()}
       </View>
+      </TouchableWithoutFeedback>
     </View>
   )
 }
@@ -314,6 +602,96 @@ const styles = StyleSheet.create({
     color: "#1A1A1A",
     marginBottom: 20,
   },
+  searchContainer: {
+    flexDirection: "row",
+    marginBottom: 16,
+    alignItems: "center",
+  },
+  searchInputContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F5F5F5",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
+    marginRight: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    height: 48,
+    fontSize: 16,
+    color: "#333333",
+  },
+  filterButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activeFilterButton: {
+    backgroundColor: "#6C47FF",
+  },
+  filtersContainer: {
+    backgroundColor: "#F9F9F9",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  filterSection: {
+    marginBottom: 16,
+  },
+  filterSectionTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginBottom: 8,
+    color: "#333333",
+  },
+  filterOptions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  filterOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: "#EEEEEE",
+  },
+  activeFilterOption: {
+    backgroundColor: "#6C47FF",
+  },
+  filterOptionText: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  activeFilterOptionText: {
+    color: "#FFFFFF",
+  },
+  categoriesScroll: {
+    marginBottom: 8,
+  },
+  resetFiltersButton: {
+    alignSelf: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  resetFiltersText: {
+    color: "#6C47FF",
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  quizListContainer: {
+    flex: 1,
+  },
+  quizCardsContainer: {
+    paddingBottom: 20,
+  },
   statsCard: {
     backgroundColor: "#F8F9FA",
     borderRadius: 16,
@@ -334,6 +712,58 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 14,
     color: "#666666",
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  emptyStateText: {
+    fontSize: 18,
+    color: "#666666",
+    textAlign: "center",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  emptyStateSubText: {
+    fontSize: 14,
+    color: "#999999",
+    textAlign: "center",
+  },
+  emptyStateButton: {
+    backgroundColor: "#6C47FF",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  emptyStateButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666666",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 30,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#FF6B6B",
+    textAlign: "center",
+    marginTop: 10,
   },
 })
 

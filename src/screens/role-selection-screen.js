@@ -17,6 +17,7 @@ import { useUser } from "@clerk/clerk-expo"
 import { useNavigation } from "@react-navigation/native"
 import { LinearGradient } from "expo-linear-gradient"
 import { MaterialCommunityIcons } from "@expo/vector-icons"
+import  {apiUrl}  from "../api/apiUrl"
 
 import Button from "../components/ui/Button"
 
@@ -40,7 +41,7 @@ const RoleSelectionScreen = () => {
   const [autoRedirected, setAutoRedirected] = useState(false)
 
 
-const API_BASE_URL = "http://192.168.11.198:8080"
+
 
   // Start animations
   useEffect(() => {
@@ -97,7 +98,7 @@ const API_BASE_URL = "http://192.168.11.198:8080"
 
     try {
       // 1. First update backend
-      const response = await fetch(`${API_BASE_URL}/api/user/update-role`, {
+      const response = await fetch(`${apiUrl}/user/update-role`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

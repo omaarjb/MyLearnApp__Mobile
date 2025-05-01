@@ -211,7 +211,7 @@ const SignInScreen = () => {
           >
             <View style={styles.logoContainer}>
               <LinearGradient
-                colors={['#7C5AFF', '#6C47FF']}
+                colors={['#7c3aed', '#db2777']}
                 style={styles.logoBackground}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
@@ -222,8 +222,9 @@ const SignInScreen = () => {
                 />
               </LinearGradient>
             </View>
-            <Text style={styles.title}>Welcome to MyLearn</Text>
-            <Text style={styles.subtitle}>Sign in to continue your learning journey</Text>
+            <Text style={styles.title}>Bienvenue sur MyLearn</Text>
+            <Text style={styles.subtitle}>Connectez-vous pour poursuivre votre parcours d'apprentissage</Text>
+
           </Animated.View>
 
           <Animated.View 
@@ -243,20 +244,20 @@ const SignInScreen = () => {
             ) : null}
 
             <Input
-              label="Email Address"
+              label="Adresse e-mail"
               value={email}
               onChangeText={setEmail}
-              placeholder="your.email@example.com"
+              placeholder="votre.email@exemple.com"
               keyboardType="email-address"
               autoCapitalize="none"
               icon="email-outline"
             />
 
             <Input
-              label="Password"
+              label="Mot de passe"
               value={password}
               onChangeText={setPassword}
-              placeholder="Enter your password"
+              placeholder="Votre mot de passe"
               secureTextEntry
               icon="lock-outline"
             />
@@ -266,7 +267,7 @@ const SignInScreen = () => {
               onPress={() => navigation.navigate("ResetPassword")}
               activeOpacity={0.7}
             >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              <Text style={styles.forgotPasswordText}>Mot de passe oublié?</Text>
             </TouchableOpacity>
 
             <Button 
@@ -288,7 +289,7 @@ const SignInScreen = () => {
           >
             <View style={styles.dividerContainer}>
               <View style={styles.divider} />
-              <Text style={styles.dividerText}>OR</Text>
+              <Text style={styles.dividerText}>OU</Text>
               <View style={styles.divider} />
             </View>
 
@@ -300,12 +301,12 @@ const SignInScreen = () => {
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
+              <Text style={styles.footerText}>Vous n'avez pas de compte?</Text>
               <TouchableOpacity 
                 onPress={() => navigation.navigate("SignUp")}
                 activeOpacity={0.7}
               >
-                <Text style={styles.footerLink}>Sign Up</Text>
+                <Text style={styles.footerLink}> S'inscrire</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -420,7 +421,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   forgotPasswordText: {
-    color: "#6C47FF",
+    color: "#7c3aed",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   footerLink: {
-    color: "#6C47FF",
+    color: "#7c3aed",
     fontSize: 15,
     fontWeight: "700",
   },

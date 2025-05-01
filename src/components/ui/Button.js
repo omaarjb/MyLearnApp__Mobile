@@ -33,7 +33,7 @@ const Button = ({
   const ButtonContent = () => (
     <>
       {loading ? (
-        <ActivityIndicator color={isPrimary ? "#FFFFFF" : "#6C47FF"} />
+        <ActivityIndicator color={isPrimary ? "#FFFFFF" : "#7c3aed"} />
       ) : (
         <Text 
           style={[
@@ -67,7 +67,7 @@ const Button = ({
       >
         {isPrimary ? (
           <LinearGradient
-            colors={['#7C5AFF', '#6C47FF']}
+            colors={['#7c3aed', '#db2777']} // Updated to purple-600 to pink-600
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={[
@@ -96,7 +96,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     borderRadius: 16,
     marginVertical: 8,
-    shadowColor: "#6C47FF",
+    shadowColor: "#7c3aed", // Updated to purple-600
     shadowOffset: {
       width: 0,
       height: 4,
@@ -113,12 +113,12 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   primaryButton: {
-    backgroundColor: "#6C47FF",
+    backgroundColor: "#7c3aed", // Fallback color (purple-600)
   },
   secondaryButton: {
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "#6C47FF",
+    borderColor: "#7c3aed", // Updated to purple-600
   },
   text: {
     fontSize: 16,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   secondaryText: {
-    color: "#6C47FF",
+    color: "#7c3aed", // Updated to purple-600
   },
 });
 
