@@ -17,7 +17,7 @@ import { useAuth } from "@clerk/clerk-expo"
 import { extractColorFromTailwindGradient, createLighterColor } from "../utils/color-converter"
 import {apiUrl} from "../api/apiUrl"
 
-const QuizScreen = ({ route }) => {
+const PassQuizScreen = ({ route }) => {
   const { quiz } = route.params
   const navigation = useNavigation()
   const { userId } = useAuth()
@@ -633,4 +633,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default QuizScreen
+export default PassQuizScreen

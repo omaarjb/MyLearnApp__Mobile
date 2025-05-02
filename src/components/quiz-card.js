@@ -71,20 +71,28 @@ const QuizCard = ({ quiz, onPress }) => {
         <View style={styles.headerContent}>
           <View style={styles.titleContainer}>
             <View style={styles.iconContainer}>{getIconComponent(quiz.icon)}</View>
-            <Text style={styles.title}>{quiz.title}</Text>
+            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+              {quiz.title}
+            </Text>
           </View>
-          <Text style={styles.description}>{quiz.description}</Text>
+          <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">
+            {quiz.description}
+          </Text>
         </View>
       </LinearGradient>
 
       <View style={styles.cardContent}>
         <View style={styles.badgeContainer}>
           <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{quiz.category}</Text>
+            <Text style={styles.categoryText} numberOfLines={1} ellipsizeMode="tail">
+              {quiz.category}
+            </Text>
           </View>
 
           <View style={[styles.difficultyBadge, getDifficultyColor(quiz.difficulty)]}>
-            <Text style={[styles.difficultyText, getDifficultyTextColor(quiz.difficulty)]}>{quiz.difficulty}</Text>
+            <Text style={[styles.difficultyText, getDifficultyTextColor(quiz.difficulty)]}>
+              {quiz.difficulty}
+            </Text>
           </View>
         </View>
 
@@ -92,7 +100,7 @@ const QuizCard = ({ quiz, onPress }) => {
         {quiz.professor && (
           <View style={styles.professorContainer}>
             <Feather name="user" size={16} color="#666" />
-            <Text style={styles.professorText}>
+            <Text style={styles.professorText} numberOfLines={1} ellipsizeMode="tail">
               Professeur : {quiz.professor.firstName} {quiz.professor.lastName}
             </Text>
           </View>
@@ -140,7 +148,7 @@ const styles = StyleSheet.create({
   },
   titleContainer: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 8,
   },
   iconContainer: {
@@ -154,6 +162,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#FFFFFF",
+    flex: 1,
+    flexWrap: "wrap",
   },
   description: {
     fontSize: 14,
@@ -173,6 +183,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 16,
+    maxWidth: "60%",
   },
   categoryText: {
     fontSize: 12,
@@ -225,6 +236,7 @@ const styles = StyleSheet.create({
   professorText: {
     fontSize: 14,
     color: "#666666",
+    flex: 1,
   },
   statsContainer: {
     flexDirection: "row",
@@ -257,5 +269,4 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 })
-
 export default QuizCard

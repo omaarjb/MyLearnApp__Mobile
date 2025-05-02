@@ -15,51 +15,17 @@ import VerifyResetScreen from "./src/screens/VerifyResetScreen"
 import RoleSelectionScreen from "./src/screens/role-selection-screen"
 import ProfesseurHomeScreen from "./src/screens/professeur-home-screen"
 import RouteGuard from "./src/components/RouteGuard"
-import QuizScreen from "./src/screens/quiz-screen"
+import PassQuizScreen from "./src/screens/pass-quiz-screen"
 import QuizResultsScreen from "./src/screens/quiz-results-screen"
 import StatsScreen from "./src/screens/StatsScreen"
+import AccueilScreen from "./src/screens/AccueilScreen"
+import QuizScreen from "./src/screens/QuizScreen"
 
 // Replace with your publishable key from Clerk Dashboard
 const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
 
 const Stack = createNativeStackNavigator()
 
-// Create dedicated protected screen components instead of inline functions
-const ProtectedRoleSelectionScreen = (props) => (
-  <RouteGuard>
-    <RoleSelectionScreen {...props} />
-  </RouteGuard>
-)
-
-const ProtectedHomeScreen = (props) => (
-  <RouteGuard>
-    <HomeScreen {...props} />
-  </RouteGuard>
-)
-
-const ProtectedProfesseurHomeScreen = (props) => (
-  <RouteGuard>
-    <ProfesseurHomeScreen {...props} />
-  </RouteGuard>
-)
-
-const ProtectedQuizScreen = (props) => (
-  <RouteGuard>
-    <QuizScreen {...props} />
-  </RouteGuard>
-)
-
-const ProtectedQuizResultsScreen = (props) => (
-  <RouteGuard>
-    <QuizResultsScreen {...props} />
-  </RouteGuard>
-)
-
-const ProtectedStatsScreen = (props) => (
-  <RouteGuard>
-    <StatsScreen {...props} />
-  </RouteGuard>
-)
 
 export default function App() {
   return (
@@ -75,14 +41,14 @@ export default function App() {
               <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
               <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
               <Stack.Screen name="VerifyReset" component={VerifyResetScreen} />
-
-              {/* Protected screens with RouteGuard */}
-              <Stack.Screen name="RoleSelection" component={ProtectedRoleSelectionScreen} />
-              <Stack.Screen name="Home" component={ProtectedHomeScreen} />
-              <Stack.Screen name="ProfesseurHome" component={ProtectedProfesseurHomeScreen} />
-              <Stack.Screen name="Quiz" component={ProtectedQuizScreen} />
-              <Stack.Screen name="QuizResults" component={ProtectedQuizResultsScreen} />
-              <Stack.Screen name="Stats" component={ProtectedStatsScreen} />
+              <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="ProfesseurHome" component={ProfesseurHomeScreen} />
+              <Stack.Screen name="PassQuiz" component={PassQuizScreen} />
+              <Stack.Screen name="QuizResults" component={QuizResultsScreen} />
+              <Stack.Screen name="Stats" component={StatsScreen} />
+              <Stack.Screen name="Accueil" component={AccueilScreen} />
+              <Stack.Screen name="Quiz" component={QuizScreen} />
 
               {/* Add more screens as needed */}
             </Stack.Navigator>
