@@ -99,21 +99,20 @@ const HomeScreen = () => {
   // Prevent going back to sign-in screen after logging in
   useFocusEffect(
     useCallback(() => {
-      // Disable the back button when this screen is focused
       const onBackPress = () => {
         if (sidebarVisible) {
           toggleSidebar()
           return true
         }
-        return true // Return true to prevent default behavior (going back)
+        return true
       }
-
+  
       // Add event listener for hardware back button press
-      BackHandler.addEventListener("hardwareBackPress", onBackPress)
-
-      // Cleanup function to remove the event listener when the component unmounts
-      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress)
-    }, [sidebarVisible]),
+      const backHandler = BackHandler.addEventListener('hardwareBackPress', onBackPress)
+  
+      // Cleanup function to remove the event listener
+      return () => backHandler.remove()
+    }, [sidebarVisible])
   )
 
   // Set navigation options to hide back button in header

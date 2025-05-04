@@ -54,10 +54,13 @@ const PassQuizScreen = ({ route }) => {
         }
         return false
       }
-
-      BackHandler.addEventListener("hardwareBackPress", onBackPress)
-      return () => BackHandler.removeEventListener("hardwareBackPress", onBackPress)
-    }, [timerActive]),
+  
+      // Add event listener with new API
+      const backHandler = BackHandler.addEventListener("hardwareBackPress", onBackPress)
+      
+      // Cleanup with new API
+      return () => backHandler.remove()
+    }, [timerActive])
   )
 
   // Timer for quiz duration - Updated to match web implementation
