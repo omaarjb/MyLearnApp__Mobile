@@ -8,7 +8,8 @@ import {
   SafeAreaView,
   Keyboard,
   StyleSheet,
-  Dimensions
+  Dimensions,
+  TouchableOpacity,
 } from "react-native";
 import { useUser } from "@clerk/clerk-expo";
 import { useEffect, useState } from "react";
