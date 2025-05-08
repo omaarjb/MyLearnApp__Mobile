@@ -1,5 +1,5 @@
 
-# 📚 Application de Génération de Quiz 🎓
+# 📚 Application de Génération de Quiz Avec Correction Automatique🎓
 
 Bienvenue dans notre **application de génération de quiz avec correction automatique** ! Ce projet a été conçu pour offrir une plateforme innovante permettant aux **professeurs** de créer des quiz interactifs pour leurs étudiants, tout en simplifiant la gestion et l'évaluation des performances. 🚀
 
